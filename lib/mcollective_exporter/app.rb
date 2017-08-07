@@ -8,10 +8,14 @@ module MCollectiveExporter
     set :bind, '0.0.0.0'
     set :port, 80
 
+    def initialize(app = nil, params = {})
+      super(app)
+      @client = MCollectiveExporter::Client.new
+    end
+
     get '/discover' do
-      client = MCollectiveExporter::Client.new
       output = []
-      client.discover.each do |host,data|
+      @client.discover.each do |host,data|
         data[:targets].each do |target|
           output << {
             targets: [ host ],
@@ -35,8 +39,7 @@ module MCollectiveExporter
         return
       end
 
-      client = MCollectiveExporter::Client.new
-      resp = client.get(params[:host], params[:target])
+      resp = @client.get(params[:host], params[:target])
       if resp.empty?
         status 404
         body 'no such host or host timed out'

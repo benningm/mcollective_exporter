@@ -12,8 +12,12 @@ services:
     image: rmohr/activemq:latest
     ports:
       - 61613
+      - "8161:8161"
     volumes:
       - './middleware/activemq.xml:/opt/activemq/conf/activemq.xml'
+    environment:
+      - 'ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=false'
+
   server:
     build: mcollective
     links:

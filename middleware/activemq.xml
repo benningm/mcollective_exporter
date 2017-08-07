@@ -6,7 +6,30 @@
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="middleware" useJmx="true">
+    <!-- Allows us to use system properties as variables in this configuration file -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
+    </bean>
+
+   <!-- Allows accessing the server log -->
+    <bean id="logQuery" class="io.fabric8.insight.log.log4j.Log4jLogQuery"
+          lazy-init="false" scope="singleton"
+          init-method="start" destroy-method="stop">
+    </bean>
+
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="middleware" useJmx="true" schedulePeriodForDestinationPurge="10000">
+        <destinationPolicy>
+          <policyMap>
+            <policyEntries>
+              <policyEntry queue=">" optimizedDispatch="true"/>
+              <policyEntry queue="*.reply.>" gcInactiveDestinations="true" inactiveTimoutBeforeGC="300000" />
+              <policyEntry topic=">" producerFlowControl="false"/>
+            </policyEntries>
+          </policyMap>
+        </destinationPolicy>
+
         <managementContext>
             <managementContext createConnector="false"/>
         </managementContext>
@@ -52,6 +75,14 @@
             <transportConnector name="stomp+nio" uri="stomp://0.0.0.0:61613"/>
         </transportConnectors>
     </broker>
+
+    <!--
+        Enable web consoles, REST and Ajax APIs and demos
+        The web consoles requires by default login, you can disable this in the jetty.xml file
+
+        Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
+    -->
+    <import resource="jetty.xml"/>
 
 </beans>
 
